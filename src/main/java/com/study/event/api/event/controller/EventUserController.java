@@ -1,12 +1,11 @@
 package com.study.event.api.event.controller;
 
+import com.study.event.api.event.dto.request.EventUserSaveDto;
 import com.study.event.api.event.service.EventUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -31,5 +30,17 @@ public class EventUserController {
 
         boolean isMatch = eventUserService.isMatchCode(email, code);
         return ResponseEntity.ok().body(isMatch);
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<?> join(@RequestBody EventUserSaveDto dto) {
+        log.info("save User Info - {}", dto);
+        try {
+            eventUserService.confirmSignUp(dto);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+        return ResponseEntity.ok().body("saved success");
     }
 }

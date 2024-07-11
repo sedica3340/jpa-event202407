@@ -1,6 +1,7 @@
 package com.study.event.api.event.service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.study.event.api.event.dto.request.EventUserSaveDto;
 import com.study.event.api.event.entity.EmailVerification;
 import com.study.event.api.event.entity.EventUser;
 import com.study.event.api.event.repository.EmailVerificationRepository;
@@ -44,6 +45,11 @@ public class EventUserService {
                 .build();
         EventUser savedUser = eventUserRepository.save(newEventUser);
 
+        generateAndSendCode(email, savedUser);
+
+    }
+
+    private void generateAndSendCode(String email, EventUser savedUser) {
         String code = sendVerificationEmail(email);
 
         EmailVerification verification = EmailVerification.builder()
@@ -53,7 +59,6 @@ public class EventUserService {
                 .build();
 
         emailVerificationRepository.save(verification);
-
     }
 
     public String sendVerificationEmail(String email) {
@@ -105,9 +110,39 @@ public class EventUserService {
             if (ev != null
                     && ev.getExpiryDate().isAfter(LocalDateTime.now())
                     && code.equals(ev.getVerificationCode())) {
+
+                // 이메일 이증여부 true 로 수정
+                eventUser.setEmailVerified(true);
+                eventUserRepository.save(eventUser);
+
+                // 인증코드 데이터베이스에서 삭제
+                emailVerificationRepository.delete(ev);
+
                 return true;
+            } else { // 인증코드가 틀렸거나 만료된 경우
+                //인증코드 재발송
+                emailVerificationRepository.delete(ev);
+
+                generateAndSendCode(email, eventUser);
+                // 기존 인증 코드 삭제
+                // 새 인증코드 발급 이메일 재전송
+                // 데이터베이스에 새 인증코드 저장
+
             }
         }
         return false;
+    }
+
+    // 회원가입 마무리
+    public void confirmSignUp(EventUserSaveDto dto) {
+        EventUser foundUser = eventUserRepository.findByEmail(dto.getEmail())
+                .orElseThrow(
+                        () -> new RuntimeException("회원 정보가 존재하지 않습니다.")
+                );
+
+//        데이터 반영
+        foundUser.confirm(dto.getPassword());
+
+        eventUserRepository.save(foundUser);
     }
 }
