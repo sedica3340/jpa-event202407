@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class EventUserService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final JavaMailSender mailSender;
     private final JPAQueryFactory factory;
+    private final PasswordEncoder encoder;
     @Value("${study.mail.host}")
     private String mailHost;
 
@@ -140,8 +143,10 @@ public class EventUserService {
                         () -> new RuntimeException("회원 정보가 존재하지 않습니다.")
                 );
 
+
 //        데이터 반영
-        foundUser.confirm(dto.getPassword());
+        String encodedPassword = encoder.encode(dto.getPassword());
+        foundUser.confirm(encodedPassword);
 
         eventUserRepository.save(foundUser);
     }
