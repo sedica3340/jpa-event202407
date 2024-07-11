@@ -1,5 +1,6 @@
 package com.study.event.api.event.service;
 
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.study.event.api.event.entity.EmailVerification;
 import com.study.event.api.event.entity.EventUser;
 import com.study.event.api.event.repository.EmailVerificationRepository;
@@ -24,6 +25,7 @@ public class EventUserService {
     private final EventUserRepository eventUserRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final JavaMailSender mailSender;
+    private final JPAQueryFactory factory;
     @Value("${study.mail.host}")
     private String mailHost;
 
@@ -90,5 +92,22 @@ public class EventUserService {
 
 
         return String.valueOf((int) (Math.random() * 9000 + 1000));
+    }
+
+    public boolean isMatchCode(String email, String code) {
+        // 이메일을 통해 회원정보를 탐색
+        EventUser eventUser = eventUserRepository.findByEmail(email).orElse(null);
+
+        if (eventUser != null) {
+            EmailVerification ev = emailVerificationRepository.findByEventUser(eventUser).orElse(null);
+
+            // 인증코드가 있고 만료시간이 지나지 않았고 코드번호가 일치할 경우
+            if (ev != null
+                    && ev.getExpiryDate().isAfter(LocalDateTime.now())
+                    && code.equals(ev.getVerificationCode())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
