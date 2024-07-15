@@ -17,6 +17,5 @@ public class CrossOriginConfig implements WebMvcConfigurer {
                 .allowedHeaders("*") // 어떤 헤더를 허용할지
                 .allowCredentials(true) // 쿠키 전송을 허용할지
         ;
-
     }
 }
