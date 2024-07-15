@@ -1,5 +1,7 @@
 package com.study.event.api.config;
 
+import com.study.event.api.auth.filter.JwtAuthFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -7,14 +9,18 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.filter.CorsFilter;
 
 // 스프링 시큐리티 설정 파일
 // 인터셉터, 필터 처리
 // 세션인증, 토큰인증
 // 권한처리
 // OAuth2 - SNS 로그인
+@RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final JwtAuthFilter jwtAuthFilter;
 
     // 비밀번호 암호화 객체 컨테이너에 등록
     @Bean
@@ -42,6 +48,10 @@ public class SecurityConfig {
                 // 나머지 요청은 인증이후 요청가능
                 .anyRequest().authenticated() // 인가 설정 on (off = permitALl())
         ;
+
+        // 토큰 위조검사 커스텀 필터 필터체인에 등록하기
+        // CorsFilter(org.spring) 뒤에 커스텀 필터를 연결
+        http.addFilterAfter(jwtAuthFilter, CorsFilter.class);
         return http.build();
     }
 
