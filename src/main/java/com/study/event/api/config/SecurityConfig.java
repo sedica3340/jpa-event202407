@@ -3,6 +3,7 @@ package com.study.event.api.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,8 +32,15 @@ public class SecurityConfig {
                 .csrf().disable() // 필터설정 off
                 .httpBasic().disable() // 베이직 인증 off
                 .formLogin().disable() // 자체 로그인창 off
+                // 세션 인증을 더이상 사용하지 않음 요기부터
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and() // 요까지
                 .authorizeRequests() // 요청 별로 인가 설정
-                .antMatchers("/**").permitAll() // 인가 설정 off
+                // 아래 요청은 로그인 인증 이전 모두 허용
+                .antMatchers("/", "/auth/**").permitAll()
+                // 나머지 요청은 인증이후 요청가능
+                .anyRequest().authenticated() // 인가 설정 on (off = permitALl())
         ;
         return http.build();
     }

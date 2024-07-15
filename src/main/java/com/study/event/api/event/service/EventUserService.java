@@ -1,7 +1,9 @@
 package com.study.event.api.event.service;
 
+import com.study.event.api.auth.TokenProvider;
 import com.study.event.api.event.dto.request.EventUserSaveDto;
 import com.study.event.api.event.dto.request.LoginRequestDto;
+import com.study.event.api.event.dto.response.LoginResponseDto;
 import com.study.event.api.event.entity.EmailVerification;
 import com.study.event.api.event.entity.EventUser;
 import com.study.event.api.event.repository.EmailVerificationRepository;
@@ -37,6 +39,8 @@ public class EventUserService {
     // 패스워드 암호화 객체
     private final PasswordEncoder encoder;
 
+    // 토큰 생성 객체
+    private final TokenProvider tokenProvider;
 
     // 이메일 중복확인 처리
     public boolean checkEmailDuplicate(String email) {
@@ -202,7 +206,7 @@ public class EventUserService {
     }
 
     // 회원 인증 처리 (login)
-    public void authenticate(final LoginRequestDto dto) {
+    public LoginResponseDto authenticate(final LoginRequestDto dto) {
 
         EventUser eventUser = eventUserRepository
                 .findByEmail(dto.getEmail())
@@ -220,6 +224,14 @@ public class EventUserService {
         if(!encoder.matches(inputPassword, encodedPassword)) {
             throw new LoginFailException("비밀번호가 틀렸습니다.");
         }
+
+        String token = tokenProvider.createToken(eventUser);
+
+        return LoginResponseDto.builder()
+                .email(eventUser.getEmail())
+                .role(eventUser.getRole().toString())
+                .token(token)
+                .build();
 
     }
 }

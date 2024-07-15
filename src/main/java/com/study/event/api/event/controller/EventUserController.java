@@ -2,6 +2,7 @@ package com.study.event.api.event.controller;
 
 import com.study.event.api.event.dto.request.EventUserSaveDto;
 import com.study.event.api.event.dto.request.LoginRequestDto;
+import com.study.event.api.event.dto.response.LoginResponseDto;
 import com.study.event.api.event.service.EventUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +51,8 @@ public class EventUserController {
     public ResponseEntity<?> signIn(@RequestBody LoginRequestDto dto) {
 
         try {
-            eventUserService.authenticate(dto);
-            return ResponseEntity.ok().body("login success");
+            LoginResponseDto responseDto = eventUserService.authenticate(dto);
+            return ResponseEntity.ok().body(responseDto);
         } catch (Exception e) {
             // 서비스에서 예외 발생
             String errorMessage = e.getMessage();
