@@ -9,8 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-@ToString
-@EqualsAndHashCode
+@ToString(exclude = "eventUser")
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,19 +25,24 @@ public class Event {
     private Long id;
 
     @Column(name = "ev_title", nullable = false, length = 50)
-    private String title;
+    private String title; // 이벤트 제목
 
     @Column(name = "ev_desc")
-    private String description;
+    private String description; // 이벤트 설명
 
     @Column(name = "ev_image_path")
-    private String image;
+    private String image; // 이벤트 메인 이미지 경로
 
     @Column(name = "ev_start_date")
-    private LocalDate date;
+    private LocalDate date; // 이벤트 행사 시작 날짜
 
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 이벤트 등록 날짜
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ev_user_id")
+    private EventUser eventUser;
+
 
     public void changeEvent(EventSaveDto dto) {
 
@@ -46,5 +51,4 @@ public class Event {
         this.image = dto.getImageUrl();
         this.description = dto.getDesc();
     }
-
 }
