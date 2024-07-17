@@ -4,7 +4,9 @@ import com.study.event.api.event.dto.request.EventSaveDto;
 import com.study.event.api.event.dto.response.EventDetailDto;
 import com.study.event.api.event.dto.response.EventOneDto;
 import com.study.event.api.event.entity.Event;
+import com.study.event.api.event.entity.EventUser;
 import com.study.event.api.event.repository.EventRepository;
+import com.study.event.api.event.repository.EventUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,16 +27,21 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final EventUserRepository eventUserRepository;
 
     // 전체 조회 서비스
-    public Map<String, Object> getEvents(String sort, int pageNo) {
+    public Map<String, Object> getEvents(String sort, int pageNo, String userId) {
         Pageable pageable = PageRequest.of(pageNo - 1, 4);
 
-        Page<Event> eventsPage = eventRepository.findEvents(sort, pageable);
+        Page<Event> eventsPage = eventRepository.findEvents(sort, pageable, userId);
+
+
+//        List<Event> events = eventUser.getEventList();
 
         List<Event> events = eventsPage.getContent();
 
         long totalElements = eventsPage.getTotalElements();
+
 
         List<EventDetailDto> eventDtoList = events
                 .stream().map(EventDetailDto::new)
@@ -45,10 +52,14 @@ public class EventService {
         return map;
     }
 
-    public void saveEvent(EventSaveDto dto) {
+    public void saveEvent(EventSaveDto dto, String userId) {
+
+        EventUser eventUser = eventUserRepository.findById(userId).orElseThrow();
+        Event newEvent = dto.toEntity();
+        newEvent.setEventUser(eventUser);
 
 
-        Event savedEvent = eventRepository.save(dto.toEntity());
+        Event savedEvent = eventRepository.save(newEvent);
         log.info("saved event: {}", savedEvent);
     }
 

@@ -22,8 +22,10 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
     private final JPAQueryFactory factory;
 
     @Override
-    public Page<Event> findEvents(String sort, Pageable pageable) {
-        List<Event> eventList = factory.selectFrom(event)
+    public Page<Event> findEvents(String sort, Pageable pageable, String userId) {
+        List<Event> eventList = factory
+                .selectFrom(event)
+                .where(event.eventUser.id.eq(userId))
                 .orderBy(specifier(sort))
                 .offset((pageable.getOffset()))
                 .limit(pageable.getPageSize())
@@ -31,6 +33,7 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
         Long count = factory
                 .select(event.count())
                 .from(event)
+                .where(event.eventUser.id.eq(userId))
                 .fetchOne();
 
 
