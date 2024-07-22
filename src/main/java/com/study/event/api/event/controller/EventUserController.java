@@ -1,5 +1,7 @@
 package com.study.event.api.event.controller;
 
+import com.study.event.api.auth.TokenProvider;
+import com.study.event.api.auth.TokenProvider.TokenUserInfo;
 import com.study.event.api.event.dto.request.EventUserSaveDto;
 import com.study.event.api.event.dto.request.LoginRequestDto;
 import com.study.event.api.event.dto.response.LoginResponseDto;
@@ -7,7 +9,11 @@ import com.study.event.api.event.service.EventUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.sql.SQLException;
+import java.util.NoSuchElementException;
 
 @RestController
 @Slf4j
@@ -59,5 +65,24 @@ public class EventUserController {
             return ResponseEntity.status(422).body(errorMessage);
         }
 
+    }
+
+    // premium 회원으로 등급업하는 요청처리
+    @PutMapping("/promote")
+    public ResponseEntity<?> promote(
+            @AuthenticationPrincipal TokenUserInfo tokenInfo
+            ) {
+
+
+        try {
+            LoginResponseDto dto = eventUserService.promoteToPremium(tokenInfo.getUserId());
+            return ResponseEntity.ok().body(dto);
+        } catch (NoSuchElementException e) {
+            log.warn(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+//        catch (SQLException e) {
+//            return ResponseEntity.internalServerError().body("ㅈㅅ;");
+//        }
     }
 }

@@ -1,10 +1,13 @@
 package com.study.event.api.event.service;
 
+import com.study.event.api.auth.TokenProvider;
+import com.study.event.api.auth.TokenProvider.TokenUserInfo;
 import com.study.event.api.event.dto.request.EventSaveDto;
 import com.study.event.api.event.dto.response.EventDetailDto;
 import com.study.event.api.event.dto.response.EventOneDto;
 import com.study.event.api.event.entity.Event;
 import com.study.event.api.event.entity.EventUser;
+import com.study.event.api.event.entity.Role;
 import com.study.event.api.event.repository.EventRepository;
 import com.study.event.api.event.repository.EventUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +33,10 @@ public class EventService {
     private final EventUserRepository eventUserRepository;
 
     // 전체 조회 서비스
-    public Map<String, Object> getEvents(String sort, int pageNo, String userId) {
+    public Map<String, Object> getEvents(String sort, int pageNo, TokenUserInfo tokenInfo) {
         Pageable pageable = PageRequest.of(pageNo - 1, 4);
 
-        Page<Event> eventsPage = eventRepository.findEvents(sort, pageable, userId);
+        Page<Event> eventsPage = eventRepository.findEvents(sort, pageable, tokenInfo);
 
 
 //        List<Event> events = eventUser.getEventList();
@@ -52,11 +55,20 @@ public class EventService {
         return map;
     }
 
-    public void saveEvent(EventSaveDto dto, String userId) {
+    public void saveEvent(EventSaveDto dto, TokenUserInfo tokenInfo) {
 
-        EventUser eventUser = eventUserRepository.findById(userId).orElseThrow();
+        EventUser eventUser = eventUserRepository.findById(tokenInfo.getUserId()).orElseThrow();
         Event newEvent = dto.toEntity();
         newEvent.setEventUser(eventUser);
+
+        // 로그인한 회원 권한 조회 확인 + 등록 개수 확인
+        // 권한에 따른 글쓰기 제한
+        if (
+                eventUser.getRole() == Role.COMMON
+                        && eventUser.getEventList().size() >= 4
+        ) {
+            throw new IllegalStateException("일반 회원은 이벤트를 더 이상 등록할 수 없습니다.");
+        }
 
 
         Event savedEvent = eventRepository.save(newEvent);
